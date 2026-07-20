@@ -40,6 +40,28 @@ export function isAzguardInstalled(timeoutMs = 3000): Promise<boolean> {
   return AzguardClient.isAzguardInstalled(timeoutMs);
 }
 
+/** Diagnostic: report the wallet version + capabilities (no connection needed). */
+export async function diagnose(): Promise<string> {
+  try {
+    const azguard = await AzguardClient.create();
+    const info = await azguard.getWalletInfo();
+    return `Azguard v${info.version} · capabilities: ${JSON.stringify(info.capabilities)}`;
+  } catch (e) {
+    return `getWalletInfo failed: ${(e as Error)?.message ?? String(e)}`;
+  }
+}
+
+/** Extract a readable message from any thrown value. */
+export function errMsg(e: unknown): string {
+  if (e instanceof Error) return e.message || e.name;
+  if (typeof e === 'string') return e;
+  try {
+    return JSON.stringify(e);
+  } catch {
+    return String(e);
+  }
+}
+
 export const INSTALL_URL =
   'https://chromewebstore.google.com/detail/azguard-wallet/pliilpflcmabdiapdeihifihkbdfnbmn';
 

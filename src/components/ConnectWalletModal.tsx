@@ -13,6 +13,7 @@ const FOOTER = 'Powered by Aztec Network, build by Neuport Labs with <3';
 export function ConnectWalletModal({ open, onClose, onConnected }: Props) {
   const [stage, setStage] = useState<Stage>('connecting');
   const [error, setError] = useState('');
+  const [diag, setDiag] = useState('');
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
@@ -35,10 +36,11 @@ export function ConnectWalletModal({ open, onClose, onConnected }: Props) {
         onConnected(conn.address);
         onClose();
       } catch (e) {
-        if (!cancelled) {
-          setError((e as Error).message || 'Connection was rejected.');
-          setStage('error');
-        }
+        if (cancelled) return;
+        const wallet = await import('../lib/wallet');
+        setError(wallet.errMsg(e) || 'Connection failed');
+        setDiag(await wallet.diagnose());
+        if (!cancelled) setStage('error');
       }
     })();
 
@@ -87,7 +89,17 @@ export function ConnectWalletModal({ open, onClose, onConnected }: Props) {
         {stage === 'error' && (
           <div className="searching">
             <div className="searching-text" style={{ color: 'var(--danger)' }}>Connection failed</div>
-            <p className="modal-disclaimer" style={{ textAlign: 'center', marginTop: 0 }}>{error}</p>
+            <p className="modal-disclaimer" style={{ textAlign: 'center', marginTop: 0, wordBreak: 'break-word' }}>
+              {error}
+            </p>
+            {diag && (
+              <p
+                className="modal-disclaimer mono"
+                style={{ textAlign: 'center', marginTop: 0, fontSize: 12, wordBreak: 'break-word' }}
+              >
+                {diag}
+              </p>
+            )}
             <button className="btn btn-secondary" onClick={() => setRetry((n) => n + 1)}>
               Try again
             </button>
