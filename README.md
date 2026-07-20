@@ -25,13 +25,12 @@ Node 24 is required (managed via nvm in this environment).
   note, `Pay Invoice` + `Copy URI`. This is also the landing view when opened
   via a shared link (the URI lives in the URL hash: `…/#aztec:0x…?…`).
 - **Pay** — `You receive` summary, token badge, optional note, `Pay Invoice`.
-- **Connect wallet** modal — **real** `@aztec/wallet-sdk` flow: discovery →
-  wallet list → emoji verification (`hashToEmoji`) → confirm. Needs an Aztec
-  wallet extension (e.g. Azguard) installed to actually connect. The target
-  network is `CHAIN_INFO` in `src/lib/wallet.ts` — currently **mainnet**
-  (chainId 1, rollup version 4248422647, per docs.aztec.network/networks). It
-  MUST match the wallet's network or the wallet rejects calls with
-  "Unauthorized method/chain".
+- **Connect wallet** modal — **real Azguard** connection via
+  `@azguardwallet/client` (Azguard's own inpage-RPC client). Azguard shows its
+  own approval popup (account pick + verification), then returns the account.
+  Needs the Azguard extension installed. The target chain is `AZTEC_CHAIN` in
+  `src/lib/wallet.ts` = `aztec:4248422647` — Aztec **mainnet** ("alphanet"; the
+  number is the rollup version). Change it for other networks.
 - **Choose token** modal — ETH / USDC / add custom.
 
 ## Deploy to IPFS + ENS
@@ -57,16 +56,20 @@ Re-deploying = new CID → update the content hash record.
 
 ## Wallet integration
 
-`Connect` uses the real `@aztec/wallet-sdk` (dApp side: discovery + secure
-channel + accounts), lazy-loaded in `src/lib/wallet.ts` so the heavy
-`@aztec/aztec.js` + Barretenberg WASM code-splits into a separate chunk fetched
-only on connect (core bundle stays ~60 kB gzip). Requires an installed Aztec
-wallet extension to complete a connection.
+`Connect` uses **`@azguardwallet/client`** (`src/lib/wallet.ts`), lazy-loaded so
+it code-splits from the core bundle. It's a tiny zero-dependency inpage-RPC
+client — the whole built site is ~200 kB (no Barretenberg WASM). The dapp
+requests permission for chain `aztec:4248422647` (mainnet) and, on approval,
+reads the account address from Azguard.
+
+> Earlier this used `@aztec/wallet-sdk`, which sends numeric `Fr` chainInfo that
+> Azguard didn't recognize (it rendered a bogus `aztec:<n>` and rejected calls
+> with "Unauthorized method/chain"). Azguard speaks its own client protocol.
 
 ## Not yet wired (mocked in the UI)
 
-- **Actual payment** (`Pay Invoice`) — shows a demo toast; needs PXE + a token
-  contract call.
+- **Actual payment** (`Pay Invoice`) — shows a demo toast; needs an Azguard
+  `send_transaction` op against the token contract.
 - **Live data** — `Block: 5009`, the `$` fiat estimate, and token decimals use
   static/registry values; wire an Aztec node + price feed later.
 - **Aztec logo / ETH glyph** — geometric placeholders (Figma asset export was
