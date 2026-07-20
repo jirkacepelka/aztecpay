@@ -11,20 +11,13 @@ export type { WalletProvider };
 
 export const APP_ID = 'aztecpay';
 
-// Aztec network chain info for wallet discovery + calls. This MUST match the
-// network the user's wallet is on, or the wallet rejects methods with
-// "Unauthorized method/chain". chainId = L1 chain id, version = rollup version.
-// Values from https://docs.aztec.network/networks
-const NETWORKS = {
-  mainnet: { chainId: 1, version: 4248422647 },
-  testnet: { chainId: 11155111, version: 1821665230 },
-} as const;
-
-const NETWORK: keyof typeof NETWORKS = 'mainnet';
-
+// Chain the dApp requests from the wallet. The wallet (Azguard) renders its
+// CAIP chain id from `version` as `aztec:${version - 1}` (observed: version 1 →
+// aztec:0, version 4248422647 → aztec:4248422646). Mainnet must resolve to
+// aztec:1, so version = 2. chainId = 1 (Ethereum L1).
 export const CHAIN_INFO = {
-  chainId: new Fr(NETWORKS[NETWORK].chainId),
-  version: new Fr(NETWORKS[NETWORK].version),
+  chainId: new Fr(1),
+  version: new Fr(2),
 };
 
 export interface Discovery {
