@@ -6,12 +6,12 @@
 import { AzguardClient } from '@azguardwallet/client';
 import type { DappMetadata, DappPermissions } from '@azguardwallet/types';
 
-// Azguard CAIP-2 chain id is `aztec:<number>`, where the number is the rollup
-// version. Mainnet ("alphanet") rollup version = 4248422647 (verified on-chain
-// via the L1 Rollup contract getVersion()). Azguard shows this chain as
-// "alphanet". To target another network, change this one value:
-//   testnet  = 'aztec:1821665230'   sandbox = 'aztec:0'
-export const AZTEC_CHAIN = 'aztec:4248422647' as const;
+// Azguard mainnet chain. The working reference apps (e.g. shield.human.tech)
+// request the *named* chain "alphanet" — Azguard only enables "Approve" for a
+// chain it recognizes; a raw `aztec:<number>` it doesn't know is rejected.
+// (The @azguardwallet/types typings still say `aztec:${number}`, but the live
+// wallet accepts the network name, so we cast.) Other networks: "testnet".
+export const AZTEC_CHAIN = 'alphanet';
 
 const DAPP_METADATA: DappMetadata = {
   name: 'AztecPay',
@@ -19,13 +19,14 @@ const DAPP_METADATA: DappMetadata = {
   url: typeof window !== 'undefined' ? window.location.origin : undefined,
 };
 
-// Capabilities the dapp asks the wallet user to approve.
-const PERMISSIONS: DappPermissions[] = [
+// Capabilities the dapp asks the wallet user to approve. Uses the `aztec_*`
+// method family the live wallet expects (matching the reference apps).
+const PERMISSIONS = [
   {
     chains: [AZTEC_CHAIN],
-    methods: ['send_transaction', 'call', 'simulate_views', 'register_contract'],
+    methods: ['aztec_getChainInfo', 'aztec_registerSender', 'aztec_getAccounts', 'aztec_sendTx'],
   },
-];
+] as unknown as DappPermissions[];
 
 export interface Connection {
   /** Approved Aztec account address (0x…). */
