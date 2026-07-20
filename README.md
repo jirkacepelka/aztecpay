@@ -27,8 +27,11 @@ Node 24 is required (managed via nvm in this environment).
 - **Pay** — `You receive` summary, token badge, optional note, `Pay Invoice`.
 - **Connect wallet** modal — **real** `@aztec/wallet-sdk` flow: discovery →
   wallet list → emoji verification (`hashToEmoji`) → confirm. Needs an Aztec
-  wallet extension (e.g. Azguard) installed to actually connect; the discovery
-  chain filter is `CHAIN_INFO` in `src/lib/wallet.ts` (set it per network).
+  wallet extension (e.g. Azguard) installed to actually connect. The target
+  network is `CHAIN_INFO` in `src/lib/wallet.ts` — currently **mainnet**
+  (chainId 1, rollup version 4248422647, per docs.aztec.network/networks). It
+  MUST match the wallet's network or the wallet rejects calls with
+  "Unauthorized method/chain".
 - **Choose token** modal — ETH / USDC / add custom.
 
 ## Deploy to IPFS + ENS

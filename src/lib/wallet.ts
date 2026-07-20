@@ -11,9 +11,21 @@ export type { WalletProvider };
 
 export const APP_ID = 'aztecpay';
 
-// Chain the dApp asks wallets for. Wallets only surface if they match. Adjust
-// chainId/version to the target Aztec network (this is the discovery filter).
-export const CHAIN_INFO = { chainId: new Fr(1), version: new Fr(1) };
+// Aztec network chain info for wallet discovery + calls. This MUST match the
+// network the user's wallet is on, or the wallet rejects methods with
+// "Unauthorized method/chain". chainId = L1 chain id, version = rollup version.
+// Values from https://docs.aztec.network/networks
+const NETWORKS = {
+  mainnet: { chainId: 1, version: 4248422647 },
+  testnet: { chainId: 11155111, version: 1821665230 },
+} as const;
+
+const NETWORK: keyof typeof NETWORKS = 'mainnet';
+
+export const CHAIN_INFO = {
+  chainId: new Fr(NETWORKS[NETWORK].chainId),
+  version: new Fr(NETWORKS[NETWORK].version),
+};
 
 export interface Discovery {
   wallets: AsyncIterable<WalletProvider>;
