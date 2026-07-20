@@ -1,0 +1,70 @@
+# AztecPay
+
+Offchain invoice generator for Aztec Network. Builds shareable `aztec:` payment
+URIs (with QR codes) — no backend, fully static, deployable to **IPFS + ENS**.
+
+- URI scheme: see [docs/uri-spec.md](docs/uri-spec.md)
+- Stack: Vite + React + TypeScript, system fonts only (no external requests)
+
+## Develop
+
+```bash
+npm install
+npm run dev        # http://localhost:5187
+npm run test       # URI codec + token registry unit tests (node --test)
+npm run build      # static output → dist/
+```
+
+Node 24 is required (managed via nvm in this environment).
+
+## Screens
+
+- **Create** — form (recipient, token, amount, mode, note) → builds the invoice.
+  Reachable by clicking the `{AztecPay}` logo.
+- **Invoice** — the shareable invoice: QR of the `aztec:` URI, amount, address,
+  note, `Pay Invoice` + `Copy URI`. This is also the landing view when opened
+  via a shared link (the URI lives in the URL hash: `…/#aztec:0x…?…`).
+- **Pay** — `You receive` summary, token badge, optional note, `Pay Invoice`.
+- **Connect wallet** modal — **real** `@aztec/wallet-sdk` flow: discovery →
+  wallet list → emoji verification (`hashToEmoji`) → confirm. Needs an Aztec
+  wallet extension (e.g. Azguard) installed to actually connect; the discovery
+  chain filter is `CHAIN_INFO` in `src/lib/wallet.ts` (set it per network).
+- **Choose token** modal — ETH / USDC / add custom.
+
+## Deploy to IPFS + ENS
+
+The build is fully static with **relative asset paths** (`base: './'` in
+`vite.config.ts`) and stores invoice state in the URL hash, so it works from any
+IPFS gateway path.
+
+```bash
+npm run build
+# pin dist/ to IPFS (pick one)
+ipfs add -r dist                      # local node → returns a CID
+# or: npx thirdweb upload dist / w3 up dist / nft.storage, etc.
+```
+
+Then point your ENS name at the CID:
+
+1. ENS app → your name → **Records** → **Content Hash**
+2. set `ipfs://<CID>`
+3. resolves at `https://<name>.eth.limo` (and ENS-aware browsers).
+
+Re-deploying = new CID → update the content hash record.
+
+## Wallet integration
+
+`Connect` uses the real `@aztec/wallet-sdk` (dApp side: discovery + secure
+channel + accounts), lazy-loaded in `src/lib/wallet.ts` so the heavy
+`@aztec/aztec.js` + Barretenberg WASM code-splits into a separate chunk fetched
+only on connect (core bundle stays ~60 kB gzip). Requires an installed Aztec
+wallet extension to complete a connection.
+
+## Not yet wired (mocked in the UI)
+
+- **Actual payment** (`Pay Invoice`) — shows a demo toast; needs PXE + a token
+  contract call.
+- **Live data** — `Block: 5009`, the `$` fiat estimate, and token decimals use
+  static/registry values; wire an Aztec node + price feed later.
+- **Aztec logo / ETH glyph** — geometric placeholders (Figma asset export was
+  rate-limited); swap for the official brand assets.

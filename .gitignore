@@ -1,0 +1,15 @@
+# dependencies
+node_modules
+
+# build output
+dist
+.vercel
+*.tsbuildinfo
+
+# editor / agent tooling
+.claude
+
+# misc
+.DS_Store
+*.local
+npm-debug.log*
